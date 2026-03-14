@@ -18,6 +18,7 @@ memory: 1024
 count: 1
 
 variables:
+  AWS_DEFAULT_REGION: "us-east-1"
   REDIS_URL: redis://redis:6379/0
   MCP_BRIDGE_URL: http://mcp:8001
   AGENT_CONFIG_DIR: /app/agents
