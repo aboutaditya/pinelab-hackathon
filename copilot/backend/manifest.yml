@@ -1,0 +1,25 @@
+name: backend
+type: Load Balanced Web Service
+
+image:
+  build:
+    dockerfile: backend_django/Dockerfile
+    context: backend_django
+  port: 8002
+
+http:
+  path: '/'
+  healthcheck: '/api/v1/transactions/health/'
+
+cpu: 512
+memory: 1024
+count: 1
+
+variables:
+  DJANGO_DEBUG: 'False'
+  DJANGO_ALLOWED_HOSTS: '*'
+  DATABASE_URL: postgres://pinelabs:pinelabs_secret@postgres:5432/pinelabs
+  AGENT_URL: http://ai-agent:8000
+
+network:
+  connect: true

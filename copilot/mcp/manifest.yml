@@ -1,0 +1,25 @@
+name: mcp
+type: Backend Service
+
+image:
+  build:
+    dockerfile: mcp/Dockerfile
+    context: mcp
+  port: 8001
+  healthcheck:
+    command: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+    interval: 10s
+    retries: 2
+    timeout: 5s
+    start_period: 0s
+
+cpu: 256
+memory: 512
+count: 1
+
+variables:
+  BACKEND_BASE_URL: http://backend:8002
+  MCP_CONFIG_PATH: /app/mcp_config.yml
+
+network:
+  connect: true

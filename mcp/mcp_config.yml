@@ -1,0 +1,111 @@
+tools:
+  - name: "get_fee_profile"
+    description: "Get MDR and GST rates for a merchant. Returns the merchant's fee profile including mdr_rate, gst_rate, amc_fees, and settlement_cycle."
+    endpoint: "/api/v1/transactions/fee-profile/{phone_number}/"
+    method: "GET"
+    parameters:
+      - name: "phone_number"
+        type: "string"
+        description: "The phone number of the merchant (e.g., 9876543210)"
+        required: true
+        location: "path"
+      - name: "date"
+        type: "string"
+        description: "Transaction date to fetch historical rate (format: YYYY-MM-DD)"
+        required: true
+        location: "query"
+
+  - name: "list_fee_profiles"
+    description: "List all active merchant fee profiles with their MDR and GST rates."
+    endpoint: "/api/v1/transactions/fee-profiles/"
+    method: "GET"
+    parameters: []
+
+  - name: "fetch_transactions"
+    description: "Get all transactions for a specific settlement ID. Returns transaction details including amounts, payment modes, and refund status."
+    endpoint: "/api/v1/transactions/settlement/{settlement_id}/"
+    method: "GET"
+    parameters:
+      - name: "settlement_id"
+        type: "string"
+        description: "The unique settlement identifier (e.g., STL-M001-20260311)"
+        required: true
+        location: "path"
+
+  - name: "list_settlements"
+    description: "List all settlements. Optionally filter by phone_number."
+    endpoint: "/api/v1/transactions/settlements/"
+    method: "GET"
+    parameters:
+      - name: "phone_number"
+        type: "string"
+        description: "Optional phone number to filter settlements"
+        required: false
+        location: "query"
+
+  - name: "create_ticket"
+    description: "Raise a discrepancy ticket / reconciliation issue in the system for human review."
+    endpoint: "/api/v1/transactions/issues/"
+    method: "POST"
+    parameters:
+      - name: "phone_number"
+        type: "string"
+        description: "Phone number the issue relates to"
+        required: true
+        location: "body"
+      - name: "settlement_id"
+        type: "string"
+        description: "Settlement ID the issue relates to"
+        required: false
+        location: "body"
+      - name: "title"
+        type: "string"
+        description: "Short title describing the discrepancy"
+        required: true
+        location: "body"
+      - name: "description"
+        type: "string"
+        description: "Detailed description of the discrepancy"
+        required: true
+        location: "body"
+      - name: "expected_amount"
+        type: "number"
+        description: "Expected amount (in INR)"
+        required: false
+        location: "body"
+      - name: "actual_amount"
+        type: "number"
+        description: "Actual amount found (in INR)"
+        required: false
+        location: "body"
+      - name: "discrepancy"
+        type: "number"
+        description: "Discrepancy amount (in INR)"
+        required: false
+        location: "body"
+      - name: "severity"
+        type: "string"
+        description: "Issue severity: low, medium, high, critical"
+        required: false
+        location: "body"
+
+  - name: "list_issues"
+    description: "List all reconciliation issues / discrepancy tickets. Supports filtering by phone_number, status, and severity."
+    endpoint: "/api/v1/transactions/issues/"
+    method: "GET"
+    parameters:
+      - name: "phone_number"
+        type: "string"
+        description: "Optional phone number filter"
+        required: false
+        location: "query"
+      - name: "status"
+        type: "string"
+        description: "Optional status filter: open, investigating, resolved, dismissed"
+        required: false
+        location: "query"
+      - name: "severity"
+        type: "string"
+        description: "Optional severity filter: low, medium, high, critical"
+        required: false
+        location: "query"

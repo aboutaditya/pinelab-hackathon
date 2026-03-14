@@ -1,0 +1,107 @@
+version: "3.9"
+
+services:
+  # ── Infrastructure ──────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pinelabs}
+      POSTGRES_USER: ${POSTGRES_USER:-pinelabs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pinelabs_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pinelabs}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Django Backend (Source of Truth) ────────────────────────────
+  backend:
+    build:
+      context: ./backend_django
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-pinelabs}:${POSTGRES_PASSWORD:-pinelabs_secret}@postgres:5432/${POSTGRES_DB:-pinelabs}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-super-secret-key-change-in-production}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_ALLOWED_HOSTS=*
+      - AGENT_URL=http://ai-agent:8000
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/api/v1/transactions/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        gunicorn config.wsgi:application --bind 0.0.0.0:8002 --workers 3 --timeout 120
+      "
+
+  # ── MCP Bridge (Tool Layer) ────────────────────────────────────
+  mcp:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    environment:
+      - BACKEND_BASE_URL=http://backend:8002
+      - MCP_CONFIG_PATH=/app/mcp_config.yml
+    ports:
+      - "8001:8001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Orchestrator (Brain) ───────────────────────────────────────
+  ai-agent:
+    build:
+      context: ./ai-agent
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MCP_BRIDGE_URL=http://mcp:8001
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AGENT_CONFIG_DIR=/app/agents
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis_data:
+  postgres_data:

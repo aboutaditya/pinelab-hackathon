@@ -1,0 +1,19 @@
+name: redis
+type: Backend Service
+
+image:
+  location: redis:7-alpine
+  port: 6379
+  healthcheck:
+    command: ["CMD", "redis-cli", "ping"]
+    interval: 10s
+    retries: 2
+    timeout: 5s
+    start_period: 0s
+
+cpu: 256
+memory: 512
+count: 1
+
+network:
+  connect: true

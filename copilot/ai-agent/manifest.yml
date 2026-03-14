@@ -1,0 +1,26 @@
+name: ai-agent
+type: Backend Service
+
+image:
+  build:
+    dockerfile: ai-agent/Dockerfile
+    context: ai-agent
+  port: 8000
+  healthcheck:
+    command: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+    interval: 10s
+    retries: 2
+    timeout: 5s
+    start_period: 0s
+
+cpu: 512
+memory: 1024
+count: 1
+
+variables:
+  REDIS_URL: redis://redis:6379/0
+  MCP_BRIDGE_URL: http://mcp:8001
+  AGENT_CONFIG_DIR: /app/agents
+
+network:
+  connect: true

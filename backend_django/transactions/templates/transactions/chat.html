@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pine Labs | Simplifying Payments for the Globe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --pine-text: #003323;
+            --pine-lime: #D4FF5E;
+            --pine-gray: #6b7280;
+            --bg-white: #ffff;
+            /* Agent Colors */
+            --agent-bg: #0f172a;
+            --agent-surface: #1e293b;
+            --agent-border: #334155;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: var(--bg-white);
+            color: var(--pine-text);
+            overflow-x: hidden;
+        }
+
+        /* --- NAVBAR (image) --- */
+        .navbar-image-wrapper {
+            display: block;
+            width: 100%;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .navbar-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            vertical-align: middle;
+        }
+
+        /* --- HERO --- */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 8% 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 60px;
+        }
+
+        .hero-text { flex: 1; }
+        .hero-text h1 {
+            font-size: 90px;
+            font-weight: 800;
+            line-height: 0.92;
+            margin: 0;
+            letter-spacing: -4px;
+        }
+
+        .hero-text p {
+            font-size: 52px;
+            font-weight: 400;
+            margin: 10px 0 40px;
+            letter-spacing: -2px;
+            color: var(--pine-gray);
+        }
+
+        .btn-get-started {
+            background: var(--pine-lime);
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-get-started:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 255, 94, 0.4);
+        }
+
+        .hero-video {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .hero-video video {
+            width: 100%;
+            max-width: 560px;
+        }
+
+        /* --- AGENT FLOATING WIDGET --- */
+        #chat-trigger {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--pine-text);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        #chat-trigger:hover { transform: scale(1.1); }
+
+        #agent-window {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 420px;
+            height: 560px;
+            background: var(--agent-bg);
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.25);
+            z-index: 1001;
+            border: 1px solid var(--agent-border);
+        }
+
+        #chat-view {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .agent-header {
+            background: var(--agent-surface);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--agent-border);
+            min-height: 52px;
+            flex-shrink: 0;
+        }
+
+        .agent-header-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: white;
+        }
+
+        .agent-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .agent-header-actions .btn-header {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .agent-header-actions .btn-header:hover {
+            color: #e2e8f0;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .agent-header-actions .btn-close {
+            margin-left: 6px;
+            padding: 6px 8px;
+            color: #94a3b8;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .agent-header-actions .btn-close:hover {
+            color: white;
+        }
+
+        .agent-messages {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: #0b1120;
+        }
+
+        .agent-messages::-webkit-scrollbar { width: 6px; }
+        .agent-messages::-webkit-scrollbar-track { background: transparent; }
+        .agent-messages::-webkit-scrollbar-thumb { background: var(--agent-border); border-radius: 3px; }
+
+        .msg {
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 88%;
+            font-size: 14px;
+            line-height: 1.55;
+            color: white;
+            word-wrap: break-word;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: #2563eb;
+            border-bottom-right-radius: 4px;
+        }
+
+        .msg.agent {
+            align-self: flex-start;
+            background: var(--agent-surface);
+            border: 1px solid var(--agent-border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .agent-input-area {
+            padding: 14px 16px 16px;
+            background: var(--agent-surface);
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+            border-top: 1px solid var(--agent-border);
+        }
+
+        .agent-input-area textarea {
+            flex: 1;
+            min-width: 0;
+            background: #0f172a;
+            border: 1px solid var(--agent-border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.4;
+            outline: none;
+            resize: none;
+            transition: border-color 0.15s;
+        }
+
+        .agent-input-area textarea::placeholder {
+            color: #64748b;
+        }
+
+        .agent-input-area textarea:focus {
+            border-color: #475569;
+        }
+
+        .agent-input-area .btn-send {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--pine-lime);
+            border: none;
+            color: var(--pine-text);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .agent-input-area .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 12px rgba(212, 255, 94, 0.35);
+        }
+
+        .agent-input-area .btn-send:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #login-view {
+            position: absolute;
+            inset: 0;
+            background: var(--agent-bg);
+            z-index: 1002;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar-image-wrapper">
+        <img src="/navbar-image/" alt="Pine Labs" class="navbar-image" />
+    </header>
+
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Simplifying<br>Payments</h1>
+            <p>for the globe.</p>
+            <button class="btn-get-started">Get started</button>
+        </div>
+        <div class="hero-video">
+            <video autoplay muted loop playsinline>
+                <source src="/intro-video/" type="video/mp4">
+                Your browser does not support video.
+            </video>
+        </div>
+    </section>
+
+    <div id="chat-trigger" onclick="toggleChat()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </div>
+
+    <div id="agent-window">
+        <div class="agent-header">
+            <span class="agent-header-title">Reconciliation Agent</span>
+            <div id="agent-header-actions" class="agent-header-actions" style="display: none;">
+                <button type="button" class="btn-header" onclick="startNewChat()">New chat</button>
+                <button type="button" class="btn-header" onclick="widgetLogout()">Logout</button>
+                <button type="button" class="btn-header btn-close" onclick="toggleChat()" aria-label="Close">✕</button>
+            </div>
+            <button type="button" id="agent-close-btn" class="btn-header btn-close" onclick="toggleChat()" aria-label="Close">✕</button>
+        </div>
+
+        <div id="login-view">
+            <h3 style="color: white; margin-bottom: 5px;">Merchant Login</h3>
+            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 20px;">Access your reconciliation data</p>
+            <input type="text" id="mID" class="login-input" placeholder="Phone Number or Merchant ID" onkeydown="if(event.key==='Enter') doLogin()">
+            <input type="password" id="mPass" class="login-input" placeholder="Password" onkeydown="if(event.key==='Enter') doLogin()">
+            <div id="loginError" style="color: #ef4444; font-size: 12px; margin-top: 8px; display: none;">Invalid credentials. Please try again.</div>
+            <button class="btn-get-started" style="width: 100%; margin-top: 15px;" onclick="doLogin()">Login to Agent</button>
+        </div>
+
+        <div id="chat-view" style="display: none;">
+            <div class="agent-messages" id="agent-msgs"></div>
+            <div class="agent-input-area">
+                <textarea id="agent-input" rows="1" placeholder="Ask about settlements…" style="min-height: 36px; max-height: 120px;" onkeydown="handleAgentKeyDown(event)"></textarea>
+                <button type="button" id="agent-send-btn" class="btn-send" onclick="sendAgentMsg()" aria-label="Send">➔</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .msg .message-content { margin: 0; }
+        .msg .message-content p { margin: 0 0 0.5em; }
+        .msg .message-content p:last-child { margin-bottom: 0; }
+        .msg .message-content ul, .msg .message-content ol { margin: 0.35em 0; padding-left: 1.35rem; }
+        .msg.agent .message-content strong { font-weight: 600; }
+        .agent-loading { display: flex; gap: 4px; padding: 4px 0; }
+        .agent-loading .dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: agentBounce 1.4s infinite ease-in-out both; }
+        .agent-loading .dot:nth-child(1) { animation-delay: -0.32s; }
+        .agent-loading .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes agentBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+    </style>
+
+    <script>
+        const isLocal = window.location.hostname === 'localhost';
+        const orchUrl = isLocal ? 'http://localhost:8000' : '';
+        const backUrl = isLocal ? 'http://localhost:8002' : window.location.origin;
+        const chatEndpoint = isLocal ? orchUrl + '/chat/v1/reconciliation' : backUrl + '/api/v1/transactions/chat/reconciliation/';
+        const STORAGE_PREFIX = 'pine_labs_chat_';
+        let currentParentId = null;
+        let isWaitingForResponse = false;
+
+        function toggleChat() {
+            const win = document.getElementById('agent-window');
+            win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function getStorageKey(merchantId) { return STORAGE_PREFIX + (merchantId || 'default'); }
+
+        function saveMessageHistory(merchantId, role, content, newParentId) {
+            const key = getStorageKey(merchantId);
+            let history = JSON.parse(localStorage.getItem(key) || '{"messages": [], "parentId": null}');
+            history.messages.push({ role, content });
+            if (newParentId) history.parentId = newParentId;
+            localStorage.setItem(key, JSON.stringify(history));
+        }
+
+        function loadMerchantHistory() {
+            const auth = sessionStorage.getItem('merchant_auth');
+            if (!auth) return;
+            const { phone_number } = JSON.parse(auth);
+            const key = getStorageKey(phone_number);
+            const stored = localStorage.getItem(key);
+            const container = document.getElementById('agent-msgs');
+            container.innerHTML = '';
+            if (stored) {
+                const history = JSON.parse(stored);
+                currentParentId = history.parentId;
+                history.messages.forEach(msg => addMsgToWidget(msg.role, msg.content, true));
+            } else {
+                currentParentId = null;
+                const name = JSON.parse(auth).merchant_name;
+                addMsgToWidget('agent', `Hi **${name}**! How can I help you reconcile today?`);
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function doLogin() {
+            const id = document.getElementById('mID').value.trim();
+            const pass = document.getElementById('mPass').value.trim();
+            const errorEl = document.getElementById('loginError');
+            errorEl.style.display = 'none';
+            if (!id || !pass) return;
+            try {
+                const res = await fetch(`${backUrl}/api/v1/transactions/login/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ identifier: id, password: pass })
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    sessionStorage.setItem('merchant_auth', JSON.stringify(user));
+                    document.getElementById('login-view').style.display = 'none';
+                    document.getElementById('chat-view').style.display = 'flex';
+                    document.getElementById('agent-close-btn').style.display = 'none';
+                    document.getElementById('agent-header-actions').style.display = 'flex';
+                    loadMerchantHistory();
+                } else {
+                    errorEl.style.display = 'block';
+                    setTimeout(function() { errorEl.style.display = 'none'; }, 3000);
+                }
+            } catch (e) {
+                alert('Backend offline. Please try again.');
+            }
+        }
+
+        function widgetLogout() {
+            sessionStorage.removeItem('merchant_auth');
+            document.getElementById('agent-header-actions').style.display = 'none';
+            document.getElementById('agent-close-btn').style.display = 'block';
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('chat-view').style.display = 'none';
+            document.getElementById('agent-msgs').innerHTML = '';
+            document.getElementById('mID').value = '';
+            document.getElementById('mPass').value = '';
+            currentParentId = null;
+        }
+
+        function startNewChat() {
+            currentParentId = null;
+            const auth = sessionStorage.getItem('merchant_auth');
+            const container = document.getElementById('agent-msgs');
+            container.innerHTML = '';
+            if (auth) {
+                const key = getStorageKey(JSON.parse(auth).phone_number);
+                localStorage.setItem(key, JSON.stringify({ messages: [], parentId: null }));
+            }
+            addMsgToWidget('agent', 'Started a new reconciliation session. How can I help?');
+            document.getElementById('agent-msgs').scrollTop = document.getElementById('agent-msgs').scrollHeight;
+        }
+
+        function formatMessage(text) {
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({ breaks: true });
+                return marked.parse(text);
+            }
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+        }
+
+        function addMsgToWidget(role, content, isHistory) {
+            const container = document.getElementById('agent-msgs');
+            const d = document.createElement('div');
+            d.className = 'msg ' + role;
+            const inner = document.createElement('div');
+            inner.className = 'message-content';
+            if (role === 'agent') inner.innerHTML = formatMessage(content); else inner.textContent = content;
+            d.appendChild(inner);
+            if (isHistory) d.style.animation = 'none';
+            container.appendChild(d);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addLoadingIndicator() {
+            const id = 'loading-' + Date.now();
+            const container = document.getElementById('agent-msgs');
+            const d = document.createElement('div');
+            d.className = 'msg agent';
+            d.id = id;
+            const inner = document.createElement('div');
+            inner.className = 'message-content';
+            inner.innerHTML = '<div class="agent-loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
+            d.appendChild(inner);
+            container.appendChild(d);
+            container.scrollTop = container.scrollHeight;
+            return id;
+        }
+
+        function handleAgentKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAgentMsg(); }
+        }
+
+        document.getElementById('agent-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        async function sendAgentMsg() {
+            const input = document.getElementById('agent-input');
+            const msg = input.value.trim();
+            const auth = sessionStorage.getItem('merchant_auth');
+            if (!msg || !auth || isWaitingForResponse) return;
+            const { phone_number } = JSON.parse(auth);
+
+            addMsgToWidget('user', msg);
+            saveMessageHistory(phone_number, 'user', msg, null);
+            input.value = '';
+            input.style.height = 'auto';
+
+            const loadingId = addLoadingIndicator();
+            isWaitingForResponse = true;
+            document.getElementById('agent-send-btn').disabled = true;
+            input.disabled = true;
+
+            try {
+                const payload = { message: msg, phone_number: phone_number };
+                if (currentParentId) payload.parent_id = currentParentId;
+                const res = await fetch(chatEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                var loadingEl = document.getElementById(loadingId);
+                if (loadingEl) loadingEl.remove();
+                if (res.ok) {
+                    currentParentId = data.message_id;
+                    addMsgToWidget('agent', data.content);
+                    saveMessageHistory(phone_number, 'agent', data.content, currentParentId);
+                } else {
+                    const errMsg = data.detail ? (typeof data.detail === 'object' ? JSON.stringify(data.detail) : data.detail) : (data.message || 'An error occurred.');
+                    addMsgToWidget('agent', 'Error: ' + errMsg);
+                    saveMessageHistory(phone_number, 'agent', 'Error: ' + errMsg, currentParentId);
+                }
+            } catch (e) {
+                document.getElementById(loadingId) && document.getElementById(loadingId).remove();
+                addMsgToWidget('agent', 'Error: Could not connect to the reconciliation agent. Please try again.');
+                saveMessageHistory(phone_number, 'agent', 'Error: Could not connect to the reconciliation agent. Please try again.', currentParentId);
+            } finally {
+                isWaitingForResponse = false;
+                document.getElementById('agent-send-btn').disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            var win = document.getElementById('agent-window');
+            if (win) win.style.display = 'flex';
+            if (sessionStorage.getItem('merchant_auth')) {
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('chat-view').style.display = 'flex';
+                var closeBtn = document.getElementById('agent-close-btn');
+                if (closeBtn) closeBtn.style.display = 'none';
+                var actions = document.getElementById('agent-header-actions');
+                if (actions) actions.style.display = 'flex';
+                loadMerchantHistory();
+            }
+        });
+    </script>
+</body>
+</html>

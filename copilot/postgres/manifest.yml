@@ -1,0 +1,24 @@
+name: postgres
+type: Backend Service
+
+image:
+  location: postgres:16-alpine
+  port: 5432
+  healthcheck:
+    command: ["CMD-SHELL", "pg_isready -U pinelabs"]
+    interval: 10s
+    retries: 2
+    timeout: 5s
+    start_period: 10s
+
+cpu: 256
+memory: 512
+count: 1
+
+variables:
+  POSTGRES_DB: pinelabs
+  POSTGRES_USER: pinelabs
+  POSTGRES_PASSWORD: pinelabs_secret
+
+network:
+  connect: true
